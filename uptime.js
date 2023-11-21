@@ -13,7 +13,9 @@ const MAINTENANCE_USER_ID = config.MAINTENANCE_USER_ID;
 const STATUSPAGE = config.STATUSPAGE;
 
 const PINGTIME = config.PINGTIME;
-const PINGTIMEDOWN = config.PINGTIMEDOWN;
+
+const ORANGETRIES = config.ORANGETRIES;
+const DOWNTRIES = config.DOWNTRIES;
 
 const RED = config.RED;
 const GREEN = config.GREEN;
@@ -32,15 +34,27 @@ const client = new Client({
 let websiteStatus = 2;
 let pingInterval = PINGTIME;
 let maintenanceMode = false;
-let downcount = 0
+let downcount = 0;
+let OneBeforeOrange = 2;
 
 let errormessage = "none";
 
 client.once('ready', () => {
-  console.log(`Version: 1.0.0`)
-  console.log(`Logged in as ${client.user.tag}`);
   pingInterval = pingInterval;
+  OneBeforeOrange = ORANGETRIES - 1;
   setInterval(pingURL, pingInterval);
+  console.log(`###################################`);
+  console.log(`██████  ██ ███    ██  ██████  ███████ ██████  
+██   ██ ██ ████   ██ ██       ██      ██   ██ 
+██████  ██ ██ ██  ██ ██   ███ █████   ██████  
+██      ██ ██  ██ ██ ██    ██ ██      ██   ██ 
+██      ██ ██   ████  ██████  ███████ ██   ██ `);
+  console.log(`Version: 1.0.1`)
+  console.log(`##########################`);
+  console.log(`Logged in as ${client.user.tag}`);
+  console.log(`Ping Interval: ${pingInterval}`);
+  console.log(`Tries until down: ${DOWNTRIES}`);
+  console.log(`##########################`);
   pingURL();
 });
 
@@ -51,7 +65,7 @@ client.on('messageCreate', (message) => {
       maintenanceMode = true;
       const maintenanceText = content.substring('maintenance'.length).trim();
       console.log("[O] Maintenance mode is enabled");
-      sendStatusMessage('Maintenance mode activated. Pings temporarily stopped.');
+      /*sendStatusMessage('Maintenance mode activated. Pings temporarily stopped.');*/
       sendBlue(maintenanceText);
       clearInterval(pingIntervalId);
     } else if (content === 'resume' && maintenanceMode) {
@@ -91,15 +105,16 @@ function pingURL() {
             pingInterval = PINGTIME;
         }
       } else {
-        console.log(`[X] Website is down: ${URL_TO_PING} - downcount: ${downcount}/20`);
+        console.log(`[X] Website is down: ${URL_TO_PING} - downcount: ${downcount}/${DOWNTRIES}`);
         console.log(`[X] ${error}`)
+        sendLogMessage(`${error} - Confirmation: ${downcount}/${DOWNTRIES}`);
         downcheck();
       }
     })
     .catch((error) => {
-      console.log(`[X] Website is down: ${URL_TO_PING} - Confirmation: ${downcount}/20`);
+      console.log(`[X] Website is down: ${URL_TO_PING} - Confirmation: ${downcount}/${DOWNTRIES}`);
       console.error(`[X] ${error}`);
-      sendLogMessage(`${error}`);
+      sendLogMessage(`${error} - Confirmation: ${downcount}/${DOWNTRIES}`);
       errormessage = error;
       downcheck()
     });
@@ -110,22 +125,24 @@ function downcheck() {
     websiteStatus = 2;
     downcount++
     pingInterval = PINGTIME;
-  } else if (websiteStatus === 2 && downcount <= 4) {
+  } else if (websiteStatus === 2 && downcount <= OneBeforeOrange) {
     downcount++;
     pingInterval = PINGTIME;
-  } else if (websiteStatus === 2 && downcount === 5) {
+  } else if (websiteStatus === 2 && downcount === ORANGETRIES) {
+    console.log('[X] Sent Orange')
+    sendLogMessage('Sent Orange')
     sendOrange(`${errormessage}`)
     downcount++;
     pingInterval = PINGTIME;
-  } else if (websiteStatus === 2 && downcount < 20) {
+  } else if (websiteStatus === 2 && downcount < DOWNTRIES) {
     downcount++;
     pingInterval = PINGTIME;
-  } else if (websiteStatus === 2 && downcount === 20) {
+  } else if (websiteStatus === 2 && downcount === DOWNTRIES) {
     websiteStatus = 0;
     sendRed(`${errormessage}`)
     downcount++;
     pingInterval = PINGTIME;
-  } else if (websiteStatus === 2 && downcount > 20) {
+  } else if (websiteStatus === 2 && downcount > DOWNTRIES) {
     downcount++
     pingInterval = PINGTIME;
   }
@@ -138,7 +155,7 @@ function sendStatusMessage(messageText) {
       .setTitle(messageText)
       .setColor('#2b2d31')
       .setTimestamp();
-    channel.send({ embeds: [embed] });
+      channel.send({ embeds: [embed], flags: [ 4096 ] });
   }
 }
 
