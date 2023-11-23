@@ -25,7 +25,7 @@ The Website Monitoring Bot is a simple yet powerful tool designed to keep track 
 
     ```bash
     git clone https://github.com/IPQow/discord-uptime-pinger
-    cd website-monitoring-bot
+    cd discord-uptime-pinger
     ```
 
 2. **Install dependencies:**
